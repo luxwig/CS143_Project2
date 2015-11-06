@@ -138,14 +138,14 @@ RC SqlEngine::load(const string& table, const string& loadfile, bool index)
   lf.open(loadfile.c.str());
   if(!lf.isopen())
   {
-    fprint(stderr, "Error: cannot open file\n");
+    fprint(stderr, "Error: Could not open file\n");
     return RC_FILE_OPEN_FAILED;
   }
 
   RecordFile rf;
   if(rf.open(table + ".tbl", 'w') != 0)
   {
-    fprintf(stderr, "Error: could not access table\n");
+    fprintf(stderr, "Error: Could not access table\n");
     return RC_FILE_OPEN_FAILED;
   }
 
@@ -174,7 +174,7 @@ RC SqlEngine::load(const string& table, const string& loadfile, bool index)
       {
         if (idx.insert(key, rid) != 0)
         {
-          fprintf(stderr, "Error: could not insert key into index\n");
+          fprintf(stderr, "Error: Could not insert key into index\n");
           return RC_INVALID_ATTRIBUTE;
         }
       }
