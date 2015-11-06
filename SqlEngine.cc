@@ -135,28 +135,13 @@ RC SqlEngine::load(const string& table, const string& loadfile, bool index)
   /* your code here */
 // Open loadfile for reading
   ifstream lf;
-  lf.open(loadfile.c.str());
-  if(!lf.isopen())
-  {
-    fprint(stderr, "Error: Could not open file\n");
-    return RC_FILE_OPEN_FAILED;
-  }
+  lf.open(loadfile.c_str());
 
   RecordFile rf;
   if(rf.open(table + ".tbl", 'w') != 0)
   {
     fprintf(stderr, "Error: Could not access table\n");
     return RC_FILE_OPEN_FAILED;
-  }
-
-  BTreeIndex idx;
-  if(index)
-  {
-    if(idx.open(table+'.idx', 'w') != 0)
-    {
-      fprintf(stderr, "Error: Could not open index\n");
-      return RC_FILE_OPEN_FAILED;
-    }
   }
 
   string line;
@@ -169,21 +154,11 @@ RC SqlEngine::load(const string& table, const string& loadfile, bool index)
 
     parseLoadLine(line, key, value);
     rf.append(key, value,rid);
-
-    if (index == true)
-      {
-        if (idx.insert(key, rid) != 0)
-        {
-          fprintf(stderr, "Error: Could not insert key into index\n");
-          return RC_INVALID_ATTRIBUTE;
-        }
-      }
   }
 
   rf.close();
   lf.close();
-  if (index == true)
-    idx.close();
+
   return 0;
 }
 RC SqlEngine::parseLoadLine(const string& line, int& key, string& value)
