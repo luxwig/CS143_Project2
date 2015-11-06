@@ -141,6 +141,8 @@ RC SqlEngine::load(const string& table, const string& loadfile, bool index)
   if(rf.open(table + ".tbl", 'w') != 0)
   {
     fprintf(stderr, "Error: Could not access table\n");
+    rf.close();
+    lf.close();
     return RC_FILE_OPEN_FAILED;
   }
 
