@@ -17,7 +17,7 @@
 
 #include "RecordFile.h"
 #include "PageFile.h"
-#include <stdlib.h>
+#include <string.h>
 
 
 struct LeafItem{
@@ -51,9 +51,15 @@ class BTNode {
     int setKeyCount(int n);
     RC read(PageId pid, const PageFile &pf);
     RC write(PageId pid, PageFile &pf);
-    BTNode(int classType) :m_class(classType) {};
+    BTNode(int classType) :m_class(classType) {memset(&buffer, 0, PageFile::PAGE_SIZE);};
     int getType();
-     virtual ~BTNode() {};
+    virtual ~BTNode() {};
+#ifdef _DEBUG_FLAG    
+    // DEBUGGING INFO
+    LeafItem getLItem(int n) { return buffer.Leaf.item[n]; }
+    NonLeafItem getNItem(int n) { return buffer.NonLeaf.item[n]; }
+    char* getBuffer() {return buffer._buffer; }
+#endif
   protected :
     Buffer buffer;
   private:
@@ -93,7 +99,7 @@ class BTLeafNode : public BTNode{
 /**
  * BTNonLeafNode: The class representing a B+tree nonleaf node.
  */
-class BTNonLeafNode : BTNode{
+class BTNonLeafNode : public BTNode{
   public:
     BTNonLeafNode() 
       : BTNode(TYPE_BTNONLEAF) {} ;

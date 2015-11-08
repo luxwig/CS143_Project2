@@ -1,6 +1,4 @@
-#include <stdio.h>
 #include <string.h>
-
 #include "BTreeNode.h"
 
 
@@ -8,18 +6,18 @@
 #define GET_ITEM_LEAF(INDEX) 	buffer.Leaf.item[INDEX]
 #define GET_ITEM(TYPE,INDEX) 	GET_ITEM_##TYPE(INDEX)
 
-#define INSERT_NODE(TYPE, DATA) {\
+#define INSERT_NODE(TYPE, DATA) {		\
   int n = getKeyCount();			\
   if (n == KEY_NUM) return RC_NODE_FULL;	\
   int i;					\
   for (i = 0; i < n; i++)			\
     if (GET_ITEM(TYPE,i).m_key > key) break;	\
-  memmove(&GET_ITEM(TYPE,i+1), 		\
+  memmove(&GET_ITEM(TYPE,i+1), 			\
           &GET_ITEM(TYPE,i), 			\
 	  sizeof(ITEM##TYPE)*(n-i+1));		\
   GET_ITEM(TYPE,i).m_data = DATA;		\
-  GET_ITEM(TYPE,i).m_key = key;		\
-  n++;						\
+  GET_ITEM(TYPE,i).m_key = key;			\
+  setKeyCount(n+1);				\
   return 0;					\
 }
 
@@ -27,6 +25,10 @@ using namespace std;
 
 typedef LeafItem 	ITEMLEAF;
 typedef NonLeafItem 	ITEMNONLEAF;
+
+// ************************
+// BTNode
+// ************************
 
 int BTNode::getKeyCount() 
 {
@@ -56,6 +58,11 @@ int BTNode::setKeyCount(int n)
     buffer.NonLeaf.count = n;
   return 0;
 }
+
+
+// ************************
+// *BTLeafNode
+// ************************
 
 RC BTLeafNode::insert(int key, const RecordId& rid)
 {
@@ -87,6 +94,12 @@ RC BTNonLeafNode::write(PageId pid, PageFile& pf)
 int BTNonLeafNode::getKeyCount()
 { return 0; }
 */
+
+
+
+// ************************
+// *BTNonLeafNode
+// ************************
 
 RC BTNonLeafNode::insert(int key, PageId pid)
 {
