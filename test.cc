@@ -124,9 +124,9 @@ void insertSplitLeafTest2()
   printBuffer(n.getBuffer());
   int x;
   RecordId rid;
-  rid.pid = (79) << 4;
-  rid.sid = (79) << 8;
-  n.insertAndSplit(79, rid, q, x);
+  rid.pid = (81) << 4;
+  rid.sid = (81) << 8;
+  n.insertAndSplit(81, rid, q, x);
   printBuffer(n.getBuffer());
   printBuffer(q.getBuffer());
   printf("%d\n", x);
@@ -189,8 +189,30 @@ void locate_Found()
   int eid;
   printf("error : %d\n",n.locate(67, eid));
   printf("eid : %d\n",eid);
+  RecordId rid;
+  n.readEntry(eid, eid, rid);
+  printf("%d %d %d\n", eid, rid.pid, rid.sid);
 }
 
+#define NODEI(X) { 	\
+  RecordId rid;		\
+  rid.pid = X<<4;	\
+  rid.sid = X<<8;	\
+  n.insert(X, rid);	\
+}
+
+void nextNodePtr()
+{
+  BTLeafNode n;
+  NODEI(10);
+  NODEI(3);
+  NODEI(74);
+  printBuffer(n.getBuffer());
+  printf("%X\n", n.getNextNodePtr());
+  n.setNextNodePtr(0xDEAD);
+  printf("%X\n", n.getNextNodePtr());
+  printBuffer(n.getBuffer());
+}  
 
 
 void locate_NotFound()
@@ -209,11 +231,15 @@ void locate_NotFound()
   printf("eid : %d\n",eid);
 }
 
-
+void initializeRootTest()
+{
+  BTNonLeafNode n;
+  n.initializeRoot(0xDEAD,0xBEEF, 0xFFFF);
+  printBuffer(n.getBuffer());
+}
 
 int main()
 {
-  locate_Found();
-  locate_NotFound();
+  initializeRootTest();
 }
 

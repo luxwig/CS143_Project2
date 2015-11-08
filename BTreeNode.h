@@ -102,15 +102,10 @@ class BTLeafNode : public BTNode{
     // virtual ~BTLeafNode();
     
     RC insert(int key, const RecordId& rid);
-
     RC insertAndSplit(int key, const RecordId& rid, BTLeafNode& sibling, int& siblingKey);
-
     RC locate(int searchKey, int& eid);
-
     RC readEntry(int eid, int& key, RecordId& rid);
-
     PageId getNextNodePtr();
-
     RC setNextNodePtr(PageId pid);
 
 
@@ -133,11 +128,8 @@ class BTNonLeafNode : public BTNode{
     // virtual ~BTNonLeafNode();
     
     RC insert(int key, PageId pid);
-
     RC insertAndSplit(int key, PageId pid, BTNonLeafNode& sibling, int& midKey);
-
     RC locateChildPtr(int searchKey, PageId& pid);
-
     RC initializeRoot(PageId pid1, int key, PageId pid2);
 
    /**** FOLLOWING FUNCTION IMPLEMENTED BY BASE CALSS *****/

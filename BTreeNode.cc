@@ -5,14 +5,11 @@
 #define GET_ITEM_LEAF(INDEX) 	buffer.Leaf.item[INDEX]
 #define GET_ITEM(TYPE,INDEX) 	GET_ITEM_##TYPE(INDEX)
 
-// FIXME :: the sareching method should be updated once locate is implented
-
 #define INSERT_NODE(TYPE, DATA) {		\
   int n = getKeyCount();			\
   if (n == KEY_NUM) return RC_NODE_FULL;	\
-  int i;					\
-  for (i = 0; i < n; i++)			\
-    if (GET_ITEM(TYPE,i).m_key > key) break;	\
+  LOCATE_NODE(TYPE, key)			\
+  int i = result + 1;				\
   memmove(&GET_ITEM(TYPE,i+1), 			\
           &GET_ITEM(TYPE,i), 			\
 	  sizeof(ITEM##TYPE)*(n-i+1));		\
@@ -153,16 +150,6 @@ RC BTLeafNode::setNextNodePtr(PageId pid)
   return 0; 
 } 
 
-
-/******* THE FOLLOWING 3 FUNCTIONS ARE IMPLEMENTED BY BASS CLASS **********
-RC BTNonLeafNode::read(PageId pid, const PageFile& pf)
-{ return 0; }
-RC BTNonLeafNode::write(PageId pid, PageFile& pf)
-{ return 0; }
-int BTNonLeafNode::getKeyCount()
-{ return 0; }
-*/
-
 // ************************
 // *BTNonLeafNode
 // ************************
@@ -172,16 +159,6 @@ RC BTNonLeafNode::insert(int key, PageId pid)
   INSERT_NODE(NONLEAF, pid);
 }
 
-void printBuffer1(char* b)
-{
-  printf("0000:\t");
-  for (int i = 0; i < PageFile::PAGE_SIZE; i+=4)
-  {
-    printf("%.4x ", *((int*)(b+i)));
-    if (i%64==60) printf("\n%.4x:\t",i);
-  }
-  printf("\n\n");
-}
 
 RC BTNonLeafNode::insertAndSplit(int key, PageId pid, BTNonLeafNode& sibling, int& midKey)
 {
