@@ -47,21 +47,40 @@ union Buffer {
 
 class BTNode {
   public:
+    
     int getKeyCount();
     int setKeyCount(int n);
+    int getType();
+
     RC read(PageId pid, const PageFile &pf);
     RC write(PageId pid, PageFile &pf);
+    
     BTNode(int classType) :m_class(classType) {memset(&buffer, 0, PageFile::PAGE_SIZE);};
-    int getType();
+    BTNode(const BTNode& src) { memcpy(buffer._buffer,
+				       src.buffer._buffer,
+				       PageFile::PAGE_SIZE); }
+    void swap(BTNode& src) {
+      char t[PageFile::PAGE_SIZE];
+      memcpy(t, buffer._buffer, PageFile::PAGE_SIZE);
+      memcpy(buffer._buffer, 
+	     src.buffer._buffer,
+	     PageFile::PAGE_SIZE);
+      memcpy(src.buffer._buffer, t, PageFile::PAGE_SIZE);
+    }
+    BTNode & operator = (const BTNode & src) { BTNode t(src); t.swap(*this); return *this;}
     virtual ~BTNode() {};
+
+
 #ifdef _DEBUG_FLAG    
     // DEBUGGING INFO
     LeafItem getLItem(int n) { return buffer.Leaf.item[n]; }
     NonLeafItem getNItem(int n) { return buffer.NonLeaf.item[n]; }
     char* getBuffer() {return buffer._buffer; }
 #endif
-  protected :
+
+  protected:
     Buffer buffer;
+    void buffercpy(char* b) { memcpy(buffer._buffer, b, PageFile::PAGE_SIZE); } 
   private:
     int m_class;
 };
@@ -92,7 +111,6 @@ class BTLeafNode : public BTNode{
     // int getKeyCount();
     // RC read(PageId pid, const PageFile& pf);
     // RC write(PageId pid, PageFile& pf);
-  private:
 }; 
 
 
@@ -120,11 +138,6 @@ class BTNonLeafNode : public BTNode{
     // RC read(PageId pid, const PageFile& pf);
     // RC write(PageId pid, PageFile& pf);
 
-  private:
-   /**
-    * The main memory buffer for loading the content of the disk page 
-    * that contains the node.
-    */
 }; 
 
 #endif /* BTREENODE_H */
