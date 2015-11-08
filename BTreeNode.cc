@@ -53,6 +53,21 @@
   else sibling.insert(key, DATA);			\
 }
 
+#define LOCATE_NODE(TYPE, KEY) 			\
+  int high = getKeyCount() - 1,			\
+      low = 0,					\
+      mid = (high + low)/2;			\
+  while (low <= high) {				\
+    mid = (high + low)/2;			\
+    int midKey = GET_ITEM(TYPE, mid).m_key;	\
+    if (midKey == KEY) break;			\
+    if (KEY > midKey) low = mid + 1;		\
+    else high = mid - 1;			\
+  }						\
+  int result;					\
+  if (GET_ITEM(TYPE, mid).m_key == KEY)		\
+  	result = mid;				\
+  else result = high;				
 
 using namespace std;
 
@@ -105,47 +120,38 @@ RC BTLeafNode::insert(int key, const RecordId& rid)
 RC BTLeafNode::insertAndSplit(int key, const RecordId& rid, 
                               BTLeafNode& sibling, int& siblingKey)
 {
-  /*
-  if (sibling.getKeyCount() != 0) return RC_NODE_FULL;
-  int n = getKeyCount();
-  char buf_old[PageFile::PAGE_SIZE],
-       buf_new[PageFile::PAGE_SIZE];
-  memcpy(buf_old, buffer._buffer, n*sizeof(ITEMNONLEAF));
-  memcpy(buf_new, 
-         buffer._buffer + n/2*sizeof(ITEMNONLEAF),
-	 PageFile::PAGE_SIZE - n/2*sizeof(ITEMNONLEAF));
-  buffercpy(buf_old);
-  setKeyCount(n/2);
-  sibling.buffercpy(buf_new);
-  sibling.setKeyCount(n-n/2);
-
-  if (key < GET_ITEM(LEAF, n/2).m_key) insert(key, rid);
-  else if (sibling.GET_ITEM(LEAF,0).m_key < key) 
-    sibling.insert(key, rid);
-  else if (n < n-n/2) insert(key,rid);
-  else sibling.insert(key,rid);
-  
-  siblingKey = sibling.GET_ITEM(LEAF,0).m_key;
-  return 0;
-  *
-  * BUG MAY APPEARS IN ORIGINAL CODE
-  */
   INSERT_SPLIT_NODE(LEAF, rid);
-  siblingKey = sibling.GET_ITEM(LEAF,0).m_key;
+  siblingKey = sibling.GET_ITEM(LEAF, 0).m_key;
   return 0;
-} // TODO
+} 
 
 RC BTLeafNode::locate(int searchKey, int& eid)
-{ return 0; } // TODO
+{
+  LOCATE_NODE(LEAF, searchKey);
+  if (GET_ITEM(LEAF, result).m_key == searchKey) {
+    eid = result;
+    return 0;
+  }
+  return RC_NO_SUCH_RECORD; 
+
+}
 
 RC BTLeafNode::readEntry(int eid, int& key, RecordId& rid)
-{ return 0; } // TODO
+{
+  if (eid >= getKeyCount()) return RC_NO_SUCH_RECORD;
+  key = GET_ITEM(LEAF, eid).m_key;
+  rid = GET_ITEM(LEAF, eid).m_data;
+  return 0; 
+} 
 
 PageId BTLeafNode::getNextNodePtr()
-{ return 0; } // TODO
+{ return buffer.Leaf.next; }
 
 RC BTLeafNode::setNextNodePtr(PageId pid)
-{ return 0; } // TODO
+{
+  buffer.Leaf.next = pid; 
+  return 0; 
+} 
 
 
 /******* THE FOLLOWING 3 FUNCTIONS ARE IMPLEMENTED BY BASS CLASS **********
@@ -179,42 +185,47 @@ void printBuffer1(char* b)
 
 RC BTNonLeafNode::insertAndSplit(int key, PageId pid, BTNonLeafNode& sibling, int& midKey)
 {
-  /*
-  if (sibling.getKeyCount() != 0) return RC_NODE_FULL;
-  int n = getKeyCount(),
-      leftKey = GET_ITEM(NONLEAF, n/2-1).m_key,
-      left = (n-1*(leftKey > key)+1*(leftKey<key))/2;
-  char buf_old[PageFile::PAGE_SIZE],
-       buf_new[PageFile::PAGE_SIZE];
-  memcpy(buf_old, buffer._buffer, left*sizeof(ITEMNONLEAF));
-  memcpy(buf_new, 
-         buffer._buffer + left*sizeof(ITEMNONLEAF),
-	 PageFile::PAGE_SIZE - left*sizeof(ITEMNONLEAF));
-  
-  buffercpy(buf_old);
-  sibling.buffercpy(buf_new);
-  memset(buffer._buffer + left*sizeof(ITEMNONLEAF),
-         0,
-	 PageFile::PAGE_SIZE - left*sizeof(ITEMNONLEAF));
-  memset(sibling.buffer._buffer + PageFile::PAGE_SIZE - left*sizeof(ITEMNONLEAF),
-         0,
-	 left*sizeof(ITEMNONLEAF));
-  setKeyCount(left);
-  sibling.setKeyCount(n-left);
-
-  if (key < leftKey) insert(key, pid);
-  else sibling.insert(key, pid);
-  
-  midKey = sibling.GET_ITEM(NONLEAF,0).m_key;
-  return 0;
-  */
   INSERT_SPLIT_NODE(NONLEAF, pid);
   midKey = sibling.GET_ITEM(NONLEAF,0).m_key;
   return 0;
-} // TODO
+} 
 
 RC BTNonLeafNode::locateChildPtr(int searchKey, PageId& pid)
-{ return 0; } // TODO
+{
+  /*
+  int high = getKeyCount() - 1,
+      low = 0,
+      mid = (high + low)/2;
+  while (low <= high) {
+    mid = (high + low)/2;
+    int midKey = GET_ITEM(NONLEAF, mid).m_key;
+    if (midKey == searchKey) break;
+    if (searchKey > midKey) low = mid + 1;
+    else high = mid - 1;
+  }
+  int result;
+  if (GET_ITEM(NONLEAF, mid).m_key == searchKey) result = mid;
+  else result = high;
+
+  if (GET_ITEM(NONLEAF, result).m_key == searchKey) {
+    pid = GET_ITEM(NONLEAF, result).m_data;
+    return 0;
+  }
+  return RC_NO_SUCH_RECORD; 
+  */
+  LOCATE_NODE(NONLEAF, searchKey);
+  if (GET_ITEM(NONLEAF, result).m_key == searchKey) {
+    pid = GET_ITEM(NONLEAF, result).m_data;
+    return 0;
+  }
+  return RC_NO_SUCH_RECORD; 
+
+}
 
 RC BTNonLeafNode::initializeRoot(PageId pid1, int key, PageId pid2)
-{ return 0; } // TODO
+{ 
+  insert(key, pid1);
+  buffer.NonLeaf.next = pid2;
+  upgrade();
+  return 0;
+} 

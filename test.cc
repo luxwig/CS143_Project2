@@ -146,9 +146,74 @@ int insertSplitLeafTest_None_Empty_Sibling_ERROR()
 }
 
 
+void locateChildPtr_Found()
+{
+  BTNonLeafNode n;
+  for (int i = 1; i <= 80; i++)
+  {
+    n.insert(i,(i)<<4);
+  }
+  printBuffer(n.getBuffer());
+  int pid;
+  n.locateChildPtr(67, pid);
+  printf("pid : %d\n",pid);
+}
+
+
+void locateChildPtr_NotFound()
+{
+  BTNonLeafNode n;
+  for (int i = 1; i <= 80; i++)
+  {
+    n.insert(i*2,(i*2)<<4);
+  }
+  printBuffer(n.getBuffer());
+  int pid;
+  printf("error: %d\n",n.locateChildPtr(67, pid));
+  printf("pid : %d, %X\n",pid, pid);
+}
+
+
+
+void locate_Found()
+{
+  BTLeafNode n;
+  for (int i = 1; i <= 80; i++)
+  {
+    RecordId rid;
+    rid.pid = (i) << 4;
+    rid.sid = (i) << 8;
+    n.insert(i, rid);
+  }
+  printBuffer(n.getBuffer());
+  int eid;
+  printf("error : %d\n",n.locate(67, eid));
+  printf("eid : %d\n",eid);
+}
+
+
+
+void locate_NotFound()
+{
+  BTLeafNode n;
+  for (int i = 1; i <= 80; i++)
+  {
+    RecordId rid;
+    rid.pid = (i*2) << 4;
+    rid.sid = (i*2) << 8;
+    n.insert(i*2, rid);
+  }
+  printBuffer(n.getBuffer());
+  int eid;
+  printf("error : %d\n",n.locate(67, eid));
+  printf("eid : %d\n",eid);
+}
+
+
+
 int main()
 {
-  insertSplitLeafTest1();
-  insertSplitLeafTest2();
-  printf("%d\n",insertSplitLeafTest_None_Empty_Sibling_ERROR());
+  locate_Found();
+  locate_NotFound();
 }
+

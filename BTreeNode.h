@@ -56,6 +56,10 @@ class BTNode {
     RC write(PageId pid, PageFile &pf);
     
     BTNode(int classType) :m_class(classType) {memset(&buffer, 0, PageFile::PAGE_SIZE);};
+
+    /*
+     **** CAUTIONS : ******
+     * Following functions have not been tested and ARE BUGGY
     BTNode(const BTNode& src) { memcpy(buffer._buffer,
 				       src.buffer._buffer,
 				       PageFile::PAGE_SIZE); }
@@ -68,6 +72,10 @@ class BTNode {
       memcpy(src.buffer._buffer, t, PageFile::PAGE_SIZE);
     }
     BTNode & operator = (const BTNode & src) { BTNode t(src); t.swap(*this); return *this;}
+    */
+
+    bool upgrade() { if (m_class != TYPE_BTNONLEAF) return false; m_class = TYPE_BTROOT; return true; }
+    bool downgrade() { if (m_class != TYPE_BTROOT) return false; m_class = TYPE_BTNONLEAF; return true; }
     virtual ~BTNode() {};
 
 
