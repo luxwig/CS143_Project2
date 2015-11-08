@@ -192,27 +192,6 @@ RC BTNonLeafNode::insertAndSplit(int key, PageId pid, BTNonLeafNode& sibling, in
 
 RC BTNonLeafNode::locateChildPtr(int searchKey, PageId& pid)
 {
-  /*
-  int high = getKeyCount() - 1,
-      low = 0,
-      mid = (high + low)/2;
-  while (low <= high) {
-    mid = (high + low)/2;
-    int midKey = GET_ITEM(NONLEAF, mid).m_key;
-    if (midKey == searchKey) break;
-    if (searchKey > midKey) low = mid + 1;
-    else high = mid - 1;
-  }
-  int result;
-  if (GET_ITEM(NONLEAF, mid).m_key == searchKey) result = mid;
-  else result = high;
-
-  if (GET_ITEM(NONLEAF, result).m_key == searchKey) {
-    pid = GET_ITEM(NONLEAF, result).m_data;
-    return 0;
-  }
-  return RC_NO_SUCH_RECORD; 
-  */
   LOCATE_NODE(NONLEAF, searchKey);
   if (GET_ITEM(NONLEAF, result).m_key == searchKey) {
     pid = GET_ITEM(NONLEAF, result).m_data;
