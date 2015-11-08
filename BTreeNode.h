@@ -21,12 +21,12 @@
 
 
 struct LeafItem{
-  RecordId	m_rid;
+  RecordId	m_data;
   int		m_key;
 };
 
 struct NonLeafItem{
-  PageId	m_pid;
+  PageId	m_data;
   int		m_key;
 };
 
