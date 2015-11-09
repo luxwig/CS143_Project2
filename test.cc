@@ -8,6 +8,14 @@
 #include <stdio.h>
 
 
+#define NODEI(X) { 	\
+  RecordId rid;		\
+  rid.pid = X<<4;	\
+  rid.sid = X<<8;	\
+  n.insert(X, rid);	\
+}
+
+
 void printBuffer(char* b)
 {
   printf("0000:\t");
@@ -18,6 +26,7 @@ void printBuffer(char* b)
   }
   printf("\n\n");
 }
+
 
 void insertNonLeafTest()
 {
@@ -58,12 +67,16 @@ void insertSplitNonLeafTest1()
     n.insert(i*2,(i*2)<<4);
   }
   printBuffer(n.getBuffer());
+  n.print();
   int x;
   n.insertAndSplit(81, 81<<4, q, x);
   printBuffer(n.getBuffer());
+  n.print();
   printBuffer(q.getBuffer());
+  q.print();
   printf("%d\n", x);
 }
+
 
 void insertSplitNonLeafTest2()
 {
@@ -73,12 +86,53 @@ void insertSplitNonLeafTest2()
     n.insert(i*2,(i*2)<<4);
   }
   printBuffer(n.getBuffer());
+  n.print();
   int x;
   n.insertAndSplit(79, 79<<4, q, x);
   printBuffer(n.getBuffer());
+  n.print();
   printBuffer(q.getBuffer());
+  q.print();
   printf("%d\n", x);
 }
+
+void insertSplitNonLeafTest3()
+{
+  BTNonLeafNode n,q;
+  for (int i = 1; i <= 79; i++)
+  {
+    n.insert(i*2,(i*2)<<4);
+  }
+  printBuffer(n.getBuffer());
+  n.print();
+  int x;
+  n.insertAndSplit(81, 81<<4, q, x);
+  printBuffer(n.getBuffer());
+  n.print();
+  printBuffer(q.getBuffer());
+  q.print();
+  printf("%d\n", x);
+}
+
+
+void insertSplitNonLeafTest4()
+{
+  BTNonLeafNode n,q;
+  for (int i = 1; i <= 79; i++)
+  {
+    n.insert(i*2,(i*2)<<4);
+  }
+  printBuffer(n.getBuffer());
+  n.print();
+  int x;
+  n.insertAndSplit(79, 79<<4, q, x);
+  printBuffer(n.getBuffer());
+  n.print();
+  printBuffer(q.getBuffer());
+  q.print();
+  printf("%d\n", x);
+}
+
 
 int insertSplitNonLeafTest_None_Empty_Sibling_ERROR()
 {
@@ -90,25 +144,25 @@ int insertSplitNonLeafTest_None_Empty_Sibling_ERROR()
   return n.insertAndSplit(1,3,q,x);
 }
 
-void insertSplitLeafTest1()
+void insertSplitLeafTest(int t, int r)
 {
   BTLeafNode n,q;
-  for (int i = 1; i <= 80; i++)
+  n.setNextNodePtr(0xDEAD);
+  for (int i = 1; i <= t; i++)
   {
-    RecordId rid;
-    rid.pid = (i*2) << 4;
-    rid.sid = (i*2) << 8;
-    n.insert(i*2, rid);
+    NODEI(i*2);
   }
   printBuffer(n.getBuffer());
   int x;
   RecordId rid;
-  rid.pid = (79) << 4;
-  rid.sid = (79) << 8;
-  n.insertAndSplit(79, rid, q, x);
+  rid.pid = (r) << 4;
+  rid.sid = (r) << 8;
+  n.insertAndSplit(r, rid, q, x);
   printBuffer(n.getBuffer());
+  n.print();
   printBuffer(q.getBuffer());
-  printf("%d\n", x);
+  q.print();
+  printf("%d\n*********************\n", x);
 }
 
 void insertSplitLeafTest2()
@@ -194,13 +248,6 @@ void locate_Found()
   printf("%d %d %d\n", eid, rid.pid, rid.sid);
 }
 
-#define NODEI(X) { 	\
-  RecordId rid;		\
-  rid.pid = X<<4;	\
-  rid.sid = X<<8;	\
-  n.insert(X, rid);	\
-}
-
 void nextNodePtr()
 {
   BTLeafNode n;
@@ -240,6 +287,9 @@ void initializeRootTest()
 
 int main()
 {
-  initializeRootTest();
+  insertSplitLeafTest(80,79);
+  insertSplitLeafTest(80,81);
+  insertSplitLeafTest(79,79);
+  insertSplitLeafTest(79,81);
 }
 

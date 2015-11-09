@@ -19,7 +19,9 @@
 #include "PageFile.h"
 #include <string.h>
 
-
+#ifdef _DEBUG_FLAG
+  #include <stdio.h>
+#endif
 struct LeafItem{
   RecordId	m_data;
   int		m_key;
@@ -34,14 +36,14 @@ struct NonLeafItem{
 union Buffer {
   char _buffer[PageFile::PAGE_SIZE];
   struct {
-     LeafItem item[KEY_NUM];
-     PageId   next;
      int      count;
+     PageId   ptr;
+     LeafItem item[KEY_NUM];
   } Leaf;
   struct  {
-     NonLeafItem item[KEY_NUM];
-     PageId      next;
      int         count;
+     PageId      ptr;
+     NonLeafItem item[KEY_NUM];
   } NonLeaf;
 };
 
@@ -84,6 +86,26 @@ class BTNode {
     LeafItem getLItem(int n) { return buffer.Leaf.item[n]; }
     NonLeafItem getNItem(int n) { return buffer.NonLeaf.item[n]; }
     char* getBuffer() {return buffer._buffer; }
+    void print()
+    {
+      printf("Count: %d\n", getKeyCount());
+      for (int i = 0 ; i < getKeyCount(); i++)
+      	if (m_class == TYPE_BTLEAF)
+	  printf("%d\t%d\t%d\t%d\t%X\t%X\t%X\n",i,
+	      buffer.Leaf.item[i].m_key,
+	      buffer.Leaf.item[i].m_data.pid,
+      	      buffer.Leaf.item[i].m_data.sid,
+	      buffer.Leaf.item[i].m_key,
+	      buffer.Leaf.item[i].m_data.pid,
+	      buffer.Leaf.item[i].m_data.sid);
+      	else
+	  printf("%d\t%d\t%d\t%X\t%X\n",i,
+	      buffer.NonLeaf.item[i].m_key,
+	      buffer.NonLeaf.item[i].m_data,
+	      buffer.NonLeaf.item[i].m_key,
+	      buffer.NonLeaf.item[i].m_data);
+      printf("\nPtr: %d %X\n", *(int*)(buffer._buffer+sizeof(int)),*(int*)(buffer._buffer+sizeof(int)));
+    }
 #endif
 
   protected:
