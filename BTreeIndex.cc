@@ -85,5 +85,15 @@ RC BTreeIndex::locate(int searchKey, IndexCursor& cursor)
  */
 RC BTreeIndex::readForward(IndexCursor& cursor, int& key, RecordId& rid)
 {
+    BTLeafNode* node = new BTLeafNode(cursor.pid, pf);
+    if (!node->readEntry(cursor.eid, key, rid))
+    {
+      PageId pid = node->getNextNodePtr();
+      delete node;
+      if (pid  == -1) return RC_END_OF_TREE;
+      node = new BTLeafNode(node->getNextNodePtr(), pf);
+      node->readEntry(cursor.eid, key, rid);
+    }
+    delete node;
     return 0;
 }

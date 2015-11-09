@@ -121,6 +121,8 @@ class BTLeafNode : public BTNode{
   public:
     BTLeafNode() : 
       BTNode(TYPE_BTLEAF) {};
+    BTLeafNode(PageId pid, const PageFile& pf) :
+      BTNode(TYPE_BTLEAF) { read(pid,pf); }
     // virtual ~BTLeafNode();
     
     RC insert(int key, const RecordId& rid);
@@ -146,7 +148,8 @@ class BTNonLeafNode : public BTNode{
   public:
     BTNonLeafNode() 
       : BTNode(TYPE_BTNONLEAF) {} ;
-
+    BTNonLeafNode(PageId pid, const PageFile& pf)
+      : BTNode(TYPE_BTNONLEAF) {read(pid, pf);};
     // virtual ~BTNonLeafNode();
     
     RC insert(int key, PageId pid);
