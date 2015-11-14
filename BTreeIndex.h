@@ -10,10 +10,12 @@
 #ifndef BTREEINDEX_H
 #define BTREEINDEX_H
 
+#include <stdlib.h>
+
 #include "Bruinbase.h"
 #include "PageFile.h"
 #include "RecordFile.h"
-             
+#include "BTreeNode.h"
 /**
  * The data structure to point to a particular entry at a b+tree leaf node.
  * An IndexCursor consists of pid (PageId of the leaf node) and 
@@ -26,6 +28,17 @@ typedef struct {
   // The entry number inside the node
   int     eid;  
 } IndexCursor;
+
+
+union SmartNodePtr{
+  BTNode*  	 TreeNode;
+  BTLeafNode*    LeafNode;
+  BTNonLeafNode* NonLeafNode;
+  void*		 Node;
+};
+/*
+SmartNodePtr& operator=(SmartNodePtr& lhs, SmartNodePtr rhs)
+{ lhs.TreeNode = }*/
 
 /**
  * Implements a B-Tree index for bruinbase.
@@ -88,11 +101,27 @@ class BTreeIndex {
    */
   RC readForward(IndexCursor& cursor, int& key, RecordId& rid);
   
+  ~BTreeIndex() {clear(); free(buf);}
+#ifdef _DEBUG_FLAG
+  void addPtr(void *p)
+  {SmartNodePtr ptr; ptr.Node = p; addPtr(ptr);}
+#endif
+ private:
+  void addPtr(SmartNodePtr p)
+  {
+    if (size == buf_size) 
+    { buf = (SmartNodePtr*) realloc(buf, buf_size*2); buf_size*=2;}
+    buf[size++] = p;
+  }
+   void delPtr() { delete buf[size--].TreeNode;  }
+   SmartNodePtr getPtr() {return buf[size-1];}
+   void clear() {while (size!=0) delPtr();}
  private:
   PageFile pf;         /// the PageFile used to store the actual b+tree in disk
-
-  PageId   rootPid;    /// the PageId of the root node
-  int      treeHeight; /// the height of the tree
+  SmartNodePtr* buf;
+  int		size;
+  int		buf_size;
+  int      	treeHeight; /// the height of the tree
   /// Note that the content of the above two variables will be gone when
   /// this class is destructed. Make sure to store the values of the two 
   /// variables in disk, so that they can be reconstructed when the index

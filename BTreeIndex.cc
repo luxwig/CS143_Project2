@@ -7,8 +7,9 @@
  * @date 3/24/2008
  */
  
+#define BUFFER_SIZE 1024
+
 #include "BTreeIndex.h"
-#include "BTreeNode.h"
 
 using namespace std;
 
@@ -17,7 +18,10 @@ using namespace std;
  */
 BTreeIndex::BTreeIndex()
 {
-    rootPid = -1;
+    buf = (SmartNodePtr*) malloc(sizeof(SmartNodePtr) * BUFFER_SIZE);
+    buf_size = BUFFER_SIZE;
+    size = 0;
+    treeHeight = 0;
 }
 
 /*
@@ -49,6 +53,62 @@ RC BTreeIndex::close()
  */
 RC BTreeIndex::insert(int key, const RecordId& rid)
 {
+    SmartNodePtr ptr;
+    ptr.TreeNode = new BTNode(0, pf);
+    addPtr(ptr);
+    PageId pid;
+    while (ptr.TreeNode->getType() != TYPE_BTLEAF)
+    {
+      ptr.NonLeafNode->locateChildPtr(key, pid);
+      ptr.TreeNode = new BTNode(pid, pf);
+    }
+    
+    if (!ptr.LeafNode->insert(key, rid)) { 
+      ptr.LeafNode->write(pf);
+      clear();
+      return 0;
+    }
+
+    // leafnode overflow
+    SmartNodePtr ptrS; ptrS.LeafNode = new BTLeafNode;
+    int keyS;
+    ptr.LeafNode->insertAndSplit(key, rid, *ptrS.LeafNode, keyS);
+    pid = pf.endPid();
+    ptr.LeafNode->setNextNodePtr(pid);
+    ptr.LeafNode->write(pf);
+    ptrS.LeafNode->write(pid, pf);
+    delete ptrS.LeafNode;
+    ptrS.LeafNode = NULL;
+    delPtr();
+    bool flag = false;
+
+    //nonleafnode overflow
+    while (getPtr().NonLeafNode->insert(keyS, pid)||getPtr().NonLeafNode->write(pf))
+    {
+      delete ptrS.TreeNode;
+      ptrS.NonLeafNode = new BTNonLeafNode;
+      getPtr().NonLeafNode->insertAndSplit(keyS, pid, *ptrS.NonLeafNode, keyS);
+      getPtr().NonLeafNode->write(pf);
+      delPtr();
+      pid = pf.endPid();
+      ptrS.NonLeafNode->write(pid, pf);
+      if (size == 0) { flag = true; break; }
+    }
+    delete ptrS.TreeNode;
+    
+    // root overflow
+    if (flag) {
+      ptr.NonLeafNode = new BTNonLeafNode;
+      ptr.NonLeafNode->initializeRoot(pf.endPid(), keyS, pf.endPid()-1);
+      ptrS.NonLeafNode = new BTNonLeafNode;
+      ptrS.NonLeafNode->read(0, pf);
+      ptrS.NonLeafNode->downgrade();
+      ptrS.NonLeafNode->write(pf.endPid(), pf);
+      delete ptrS.TreeNode;
+      ptr.NonLeafNode->write(0, pf);
+      delete ptr.NonLeafNode;
+    }
+    clear();
     return 0;
 }
 
@@ -72,28 +132,35 @@ RC BTreeIndex::insert(int key, const RecordId& rid)
  */
 RC BTreeIndex::locate(int searchKey, IndexCursor& cursor)
 {
-    return 0;
+  SmartNodePtr ptr;
+  ptr.TreeNode = new BTNode(0, pf);
+  addPtr(ptr);
+  PageId pid;
+  while (ptr.TreeNode->getType() != TYPE_BTROOT)
+  {
+    ptr.NonLeafNode->locateChildPtr(searchKey, pid);
+    ptr.TreeNode = new BTNode(pid, pf);
+  }
+  if (ptr.LeafNode->locate(searchKey, cursor.eid)) {
+    clear();
+    return RC_NO_SUCH_RECORD; }
+  clear();
+  cursor.pid = pid;
+  return 0; 
 }
 
-/*
- * Read the (key, rid) pair at the location specified by the index cursor,
- * and move foward the cursor to the next entry.
- * @param cursor[IN/OUT] the cursor pointing to an leaf-node index entry in the b+tree
- * @param key[OUT] the key stored at the index cursor location.
- * @param rid[OUT] the RecordId stored at the index cursor location.
- * @return error code. 0 if no error
- */
 RC BTreeIndex::readForward(IndexCursor& cursor, int& key, RecordId& rid)
 {
-    BTLeafNode* node = new BTLeafNode(cursor.pid, pf);
-    if (!node->readEntry(cursor.eid, key, rid))
+    SmartNodePtr ptr;
+    ptr.TreeNode = new BTNode(cursor.pid, pf);
+    if (ptr.LeafNode->readEntry(cursor.eid++, key, rid))
+      return RC_NO_SUCH_RECORD;
+    if (!ptr.LeafNode->validEntry(cursor.eid))
     {
-      PageId pid = node->getNextNodePtr();
-      delete node;
+      cursor.eid--;
+      PageId pid = ptr.LeafNode->getNextNodePtr();
       if (pid  == -1) return RC_END_OF_TREE;
-      node = new BTLeafNode(node->getNextNodePtr(), pf);
-      node->readEntry(cursor.eid, key, rid);
+      cursor.pid = pid; cursor.eid = 0;
     }
-    delete node;
     return 0;
 }
