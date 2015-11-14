@@ -64,9 +64,7 @@ typedef NonLeafItem 	ITEMNONLEAF;
 
 int BTNode::getKeyCount() 
 {
-  return (m_class==TYPE_BTLEAF)?
-    	 buffer.Leaf.count:
-	 buffer.NonLeaf.count;
+  return buffer.Node.count;
 }
 
 RC BTNode::read(PageId pid, const PageFile &opf)
@@ -79,15 +77,12 @@ RC BTNode::write(PageId pid, PageFile &pf)
   return pf.write(pid, buffer._buffer);
 } 
 
-int BTNode::getType() { return m_class; }
+int BTNode::getType() { return buffer.Node.type; }
 
 int BTNode::setKeyCount(int n)
 {
   if (n > KEY_NUM) return -1;
-  if (m_class==TYPE_BTLEAF)
-    buffer.Leaf.count = n;
-  else
-    buffer.NonLeaf.count = n;
+  buffer.Node.count = n;
   return 0;
 }
 
@@ -103,6 +98,8 @@ RC BTLeafNode::insert(int key, const RecordId& rid)
   setKeyCount(getKeyCount() + 1);
   return 0;
 }
+
+bool BTLeafNode::validEntry(int eid) {return eid < getKeyCount();}
 
 RC BTLeafNode::insertAndSplit(int key, const RecordId& rid, 
                               BTLeafNode& sibling, int& siblingKey)
@@ -125,7 +122,7 @@ RC BTLeafNode::locate(int searchKey, int& eid)
 
 RC BTLeafNode::readEntry(int eid, int& key, RecordId& rid)
 {
-  if (eid >= getKeyCount()) return RC_NO_SUCH_RECORD;
+  if (!validEntry(eid)) return RC_NO_SUCH_RECORD;
   key = GET_ITEM(LEAF, eid).m_key;
   rid = GET_ITEM(LEAF, eid).m_data;
   return 0; 
@@ -164,16 +161,12 @@ RC BTNonLeafNode::insertAndSplit(int key, PageId pid, BTNonLeafNode& sibling, in
   sibling.setKeyCount(sibling.getKeyCount() - 1);
   return 0;
 } 
-
+#include <stdio.h>
 RC BTNonLeafNode::locateChildPtr(int searchKey, PageId& pid)
 {
   LOCATE_NODE(NONLEAF, searchKey);
-  if (GET_ITEM(NONLEAF, result).m_key == searchKey) {
-    pid = GET_ITEM(NONLEAF, result).m_data;
-    return 0;
-  }
-  return RC_NO_SUCH_RECORD; 
-
+  pid = (result==-1) ? GET_PTR(NONLEAF) : GET_ITEM(NONLEAF, result).m_data;
+  return 0;
 }
 
 RC BTNonLeafNode::initializeRoot(PageId pid1, int key, PageId pid2)

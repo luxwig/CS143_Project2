@@ -22,15 +22,15 @@
 #ifdef _DEBUG_FLAG
   #include <stdio.h>
 #endif
-struct LeafItem{
+typedef struct {
   RecordId	m_data;
   int		m_key;
-};
+} LeafItem;
 
-struct NonLeafItem{
+typedef struct {
   PageId	m_data;
   int		m_key;
-};
+} NonLeafItem;
 
 
 union Buffer {
@@ -38,13 +38,20 @@ union Buffer {
   struct {
      int      count;
      PageId   ptr;
+     int      type;
      LeafItem item[KEY_NUM];
   } Leaf;
   struct  {
      int         count;
      PageId      ptr;
+     int         type;
      NonLeafItem item[KEY_NUM];
   } NonLeaf;
+  struct {
+    int		count;
+    PageId	ptr;
+    int		type;
+  } Node;
 };
 
 class BTNode {
@@ -57,7 +64,8 @@ class BTNode {
     RC read(PageId pid, const PageFile &pf);
     RC write(PageId pid, PageFile &pf);
     
-    BTNode(int classType) :m_class(classType) {memset(&buffer, 0, PageFile::PAGE_SIZE);};
+    BTNode(int classType) {memset(&buffer, 0, PageFile::PAGE_SIZE); buffer.Node.type = classType; };
+    BTNode(PageId pid, const PageFile& pf)  {read(pid, pf);};
 
     /*
      **** CAUTIONS : ******
@@ -76,8 +84,8 @@ class BTNode {
     BTNode & operator = (const BTNode & src) { BTNode t(src); t.swap(*this); return *this;}
     */
 
-    bool upgrade() { if (m_class != TYPE_BTNONLEAF) return false; m_class = TYPE_BTROOT; return true; }
-    bool downgrade() { if (m_class != TYPE_BTROOT) return false; m_class = TYPE_BTNONLEAF; return true; }
+    bool upgrade() { if (buffer.Node.type != TYPE_BTNONLEAF) return false; buffer.Node.type = TYPE_BTROOT; return true; }
+    bool downgrade() { if (buffer.Node.type != TYPE_BTROOT) return false; buffer.Node.type = TYPE_BTNONLEAF; return true; }
     virtual ~BTNode() {};
 
 
@@ -90,7 +98,7 @@ class BTNode {
     {
       printf("Count: %d\n", getKeyCount());
       for (int i = 0 ; i < getKeyCount(); i++)
-      	if (m_class == TYPE_BTLEAF)
+      	if (buffer.Node.type == TYPE_BTLEAF)
 	  printf("%d\t%d\t%d\t%d\t%X\t%X\t%X\n",i,
 	      buffer.Leaf.item[i].m_key,
 	      buffer.Leaf.item[i].m_data.pid,
@@ -111,8 +119,6 @@ class BTNode {
   protected:
     Buffer buffer;
     void buffercpy(char* b) { memcpy(buffer._buffer, b, PageFile::PAGE_SIZE); } 
-  private:
-    int m_class;
 };
 /**
  * BTLeafNode: The class representing a B+tree leaf node.
@@ -121,8 +127,6 @@ class BTLeafNode : public BTNode{
   public:
     BTLeafNode() : 
       BTNode(TYPE_BTLEAF) {};
-    BTLeafNode(PageId pid, const PageFile& pf) :
-      BTNode(TYPE_BTLEAF) { read(pid,pf); }
     // virtual ~BTLeafNode();
     
     RC insert(int key, const RecordId& rid);
@@ -131,7 +135,7 @@ class BTLeafNode : public BTNode{
     RC readEntry(int eid, int& key, RecordId& rid);
     PageId getNextNodePtr();
     RC setNextNodePtr(PageId pid);
-
+    bool validEntry(int);
 
    /**** FOLLOWING FUNCTION IMPLEMENTED BY BASE CALSS *****/
 
@@ -148,9 +152,7 @@ class BTNonLeafNode : public BTNode{
   public:
     BTNonLeafNode() 
       : BTNode(TYPE_BTNONLEAF) {} ;
-    BTNonLeafNode(PageId pid, const PageFile& pf)
-      : BTNode(TYPE_BTNONLEAF) {read(pid, pf);};
-    // virtual ~BTNonLeafNode();
+   // virtual ~BTNonLeafNode();
     
     RC insert(int key, PageId pid);
     RC insertAndSplit(int key, PageId pid, BTNonLeafNode& sibling, int& midKey);
