@@ -63,7 +63,7 @@ class BTNode {
 
     RC read(PageId pid, const PageFile &pf);
     RC write(PageId pid, PageFile &pf);
-    
+    RC write(PageFile &pf);
     BTNode(int classType) {memset(&buffer, 0, PageFile::PAGE_SIZE); buffer.Node.type = classType; };
     BTNode(PageId pid, const PageFile& pf)  {read(pid, pf);};
 
@@ -119,6 +119,8 @@ class BTNode {
   protected:
     Buffer buffer;
     void buffercpy(char* b) { memcpy(buffer._buffer, b, PageFile::PAGE_SIZE); } 
+  private : 
+    PageId m_pid;
 };
 /**
  * BTLeafNode: The class representing a B+tree leaf node.

@@ -69,6 +69,7 @@ int BTNode::getKeyCount()
 
 RC BTNode::read(PageId pid, const PageFile &opf)
 {
+  m_pid = pid;
   return opf.read(pid, buffer._buffer);
 }
 
@@ -76,6 +77,12 @@ RC BTNode::write(PageId pid, PageFile &pf)
 {
   return pf.write(pid, buffer._buffer);
 } 
+
+RC BTNode::write(PageFile &pf)
+{
+  return pf.write(m_pid, buffer._buffer);
+}
+
 
 int BTNode::getType() { return buffer.Node.type; }
 
