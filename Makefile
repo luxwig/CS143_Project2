@@ -14,9 +14,15 @@ SqlParser.tab.c: SqlParser.y
 testnode: $(SRC) $(HDR) testnode.cc
 	g++ -ggdb -o test $(SRCTEST) testnode.cc
 
-testindex: $(SRC) $(HDR) testindex.cc
+testindex: $(SRC) $(HDR) testindex.cc test_generate.cc testreadPage.cc
 	g++ -ggdb -o test $(SRCTEST) testindex.cc
+	g++ -ggdb -o gen  $(SRCTEST) test_generate.cc
+	g++ -ggdb -o read $(SRCTEST) testreadPage.cc
 clean:
 	rm -f bruinbase bruinbase.exe *.o *~ lex.sql.c SqlParser.tab.c SqlParser.tab.h
 	rm -f test test.exe
+	rm -f gen gen.exe
+	rm -f read read.exe
 	rm -f *.data	
+	rm -f input*
+	rm -f output*

@@ -26,8 +26,8 @@
   PageId ptr = GET_PTR(TYPE); 								\
   char buf_old[PageFile::PAGE_SIZE] = {},						\
        buf_new[PageFile::PAGE_SIZE] = {};						\
-  memcpy(buf_old + sizeof(int)*2, &GET_ITEM(TYPE, 0), (left)*sizeof(ITEM##TYPE));	\
-  memcpy(buf_new + sizeof(int)*2, &GET_ITEM(TYPE, left),	 			\
+  memcpy(buf_old + sizeof(int)*3, &GET_ITEM(TYPE, 0), (left)*sizeof(ITEM##TYPE));	\
+  memcpy(buf_new + sizeof(int)*3, &GET_ITEM(TYPE, left),	 			\
 	 PageFile::PAGE_SIZE - left*sizeof(ITEM##TYPE));				\
   buffercpy(buf_old);									\
   sibling.buffercpy(buf_new);  								\
@@ -115,6 +115,8 @@ RC BTLeafNode::insertAndSplit(int key, const RecordId& rid,
 {
   INSERT_SPLIT_NODE(LEAF, rid);
   siblingKey = sibling.GET_ITEM(LEAF, 0).m_key;
+  buffer.Node.type = TYPE_BTLEAF;
+  sibling.buffer.Node.type = TYPE_BTLEAF; 
   return 0;
 } 
 
@@ -168,6 +170,8 @@ RC BTNonLeafNode::insertAndSplit(int key, PageId pid, BTNonLeafNode& sibling, in
           &sibling.GET_ITEM(NONLEAF,1),
 	  PageFile::PAGE_SIZE - sizeof(int)*2 - sizeof(ITEMNONLEAF));
   sibling.setKeyCount(sibling.getKeyCount() - 1);
+  buffer.Node.type = TYPE_BTNONLEAF;
+  sibling.buffer.Node.type = TYPE_BTNONLEAF;
   return 0;
 } 
 #include <stdio.h>

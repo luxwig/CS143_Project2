@@ -54,17 +54,20 @@ void LeafNodeInit()
 
 void readForward_Test()
 {
-  LeafNodeInit();
   BTreeIndex i;
   i.open("test.data",'r');
-  IndexCursor ic;
-  ic.pid = 0; ic.eid = 0;
+  IndexCursor ic, o_ic;
+  i.locate(0, ic);
+  o_ic = ic;
   int key; RecordId rid;
   while (!i.readForward(ic, key, rid))
   {
-    printf("pid:\t%X\teid:\t%X\tKey:%X\tRecord:\t%X\t%X\n",
-	    ic.pid, ic.eid, key, rid.pid, rid.sid);
+    printf("pid:\t%X\teid:\t%X\tKey:%d\t%X\tRecord:\t%X\t%X\n",
+	    o_ic.pid, o_ic.eid, key, key, rid.pid, rid.sid);
+    o_ic = ic;
   }
+  printf("pid:\t%X\teid:\t%X\tKey:%d\t%X\tRecord:\t%X\t%X\n",
+	    o_ic.pid, o_ic.eid, key, key, rid.pid, rid.sid);
 }
 
 void addPtr_Test()
@@ -129,9 +132,8 @@ void generatig_test()
 
 void locate_test()
 {
-  generating();
   printf("NUMBER\tEID\tPID\tNUMBER\tEID\tPID\n");
-  for (int i = 0; i <46; i++) {
+  for (int i = 0; i <=115; i++) {
   BTreeIndex it;
   it.open("test.data", 'r');
   IndexCursor c;
@@ -143,5 +145,28 @@ void locate_test()
 }
 int main()
 {
+  int n;
+  while (scanf("%d", &n) && n != -1)
+  {
+  printf("%d... ", n);
+  BTreeIndex it;
+  it.open("test.data", 'w');
+  RecordId rid;
+  rid.pid = n<<4;
+  rid.sid = n<<8;
+  it.insert(n, rid);
+  it.close();
+  /*
+  printf("locate_test\n");
+  locate_test();
+  printf("readForward_test\n");
+  readForward_Test();*/
+  printf("Done\n");
+  }
+  printf("locate_test\n");
+  locate_test();
+  printf("readForward_test\n");
+  readForward_Test();
+
 }
 

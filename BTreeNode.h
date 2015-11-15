@@ -13,7 +13,7 @@
 #define TYPE_BTLEAF	1
 #define TYPE_BTNONLEAF	2
 #define TYPE_BTROOT	4
-#define KEY_NUM		80
+#define KEY_NUM		4
 
 #include "RecordFile.h"
 #include "PageFile.h"
@@ -85,7 +85,7 @@ class BTNode {
     */
 
     bool upgrade() { if (buffer.Node.type != TYPE_BTNONLEAF) return false; buffer.Node.type = TYPE_BTROOT; return true; }
-    bool downgrade() { if (buffer.Node.type != TYPE_BTROOT) return false; buffer.Node.type = TYPE_BTNONLEAF; return true; }
+    bool downgrade() { buffer.Node.type = TYPE_BTNONLEAF; return true; }
     virtual ~BTNode() {};
 
 
@@ -97,6 +97,10 @@ class BTNode {
     void print()
     {
       printf("Count: %d\n", getKeyCount());
+      if (buffer.Node.type == TYPE_BTLEAF)
+	  printf("Leaf\nP\tKey\tpid\tsid\tKey\tpid\tsid\n");
+      else
+	printf("Nonleaf\nP\tKey\tpid\tKey\tpid\n");
       for (int i = 0 ; i < getKeyCount(); i++)
       	if (buffer.Node.type == TYPE_BTLEAF)
 	  printf("%d\t%d\t%d\t%d\t%X\t%X\t%X\n",i,

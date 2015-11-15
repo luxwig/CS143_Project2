@@ -16,6 +16,7 @@ using namespace std;
 void BTreeIndex::locateLeafNode(SmartNodePtr& ptr, int searchKey, PageId& pid)
 {
   ptr.TreeNode = new BTNode(0, pf);
+  pid = 0;
   addPtr(ptr);
   while (ptr.TreeNode->getType() != TYPE_BTLEAF)
   {
@@ -64,15 +65,17 @@ RC BTreeIndex::close()
 RC BTreeIndex::insert(int key, const RecordId& rid)
 {
     SmartNodePtr ptr;
-    ptr.TreeNode = new BTNode(0, pf);
-    addPtr(ptr);
     PageId pid;
-    while (ptr.TreeNode->getType() != TYPE_BTLEAF)
-    {
-      ptr.NonLeafNode->locateChildPtr(key, pid);
-      ptr.TreeNode = new BTNode(pid, pf);
-    }
-    
+    if (pf.endPid() == 0) {
+      ptr.LeafNode = new BTLeafNode;
+      ptr.LeafNode->insert(key,rid);
+      ptr.LeafNode->setNextNodePtr(-1);
+      ptr.LeafNode->write(0, pf);
+      delete ptr.LeafNode;
+      return 0;
+    } 
+
+    locateLeafNode(ptr, key, pid);  
     if (!ptr.LeafNode->insert(key, rid)) { 
       ptr.LeafNode->write(pf);
       clear();
@@ -92,6 +95,8 @@ RC BTreeIndex::insert(int key, const RecordId& rid)
     delPtr();
     bool flag = false;
 
+    if (pf.endPid() == 2) flag = true;
+    else {
     //nonleafnode overflow
     while (getPtr().NonLeafNode->insert(keyS, pid)||getPtr().NonLeafNode->write(pf))
     {
@@ -105,14 +110,15 @@ RC BTreeIndex::insert(int key, const RecordId& rid)
       if (size == 0) { flag = true; break; }
     }
     delete ptrS.TreeNode;
-    
+    }
     // root overflow
     if (flag) {
       ptr.NonLeafNode = new BTNonLeafNode;
       ptr.NonLeafNode->initializeRoot(pf.endPid(), keyS, pf.endPid()-1);
       ptrS.NonLeafNode = new BTNonLeafNode;
       ptrS.NonLeafNode->read(0, pf);
-      ptrS.NonLeafNode->downgrade();
+      if (pf.endPid() != 2 ) 
+	ptrS.NonLeafNode->downgrade();
       ptrS.NonLeafNode->write(pf.endPid(), pf);
       delete ptrS.TreeNode;
       ptr.NonLeafNode->write(0, pf);
