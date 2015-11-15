@@ -13,6 +13,17 @@
 
 using namespace std;
 
+void BTreeIndex::locateLeafNode(SmartNodePtr& ptr, int searchKey, PageId& pid)
+{
+  ptr.TreeNode = new BTNode(0, pf);
+  addPtr(ptr);
+  while (ptr.TreeNode->getType() != TYPE_BTLEAF)
+  {
+    ptr.NonLeafNode->locateChildPtr(searchKey, pid);
+    ptr.TreeNode = new BTNode(pid, pf);
+    addPtr(ptr);
+  }
+}
 /*
  * BTreeIndex constructor
  */
@@ -21,7 +32,6 @@ BTreeIndex::BTreeIndex()
     buf = (SmartNodePtr*) malloc(sizeof(SmartNodePtr) * BUFFER_SIZE);
     buf_size = BUFFER_SIZE;
     size = 0;
-    treeHeight = 0;
 }
 
 /*
@@ -133,14 +143,8 @@ RC BTreeIndex::insert(int key, const RecordId& rid)
 RC BTreeIndex::locate(int searchKey, IndexCursor& cursor)
 {
   SmartNodePtr ptr;
-  ptr.TreeNode = new BTNode(0, pf);
-  addPtr(ptr);
   PageId pid;
-  while (ptr.TreeNode->getType() != TYPE_BTROOT)
-  {
-    ptr.NonLeafNode->locateChildPtr(searchKey, pid);
-    ptr.TreeNode = new BTNode(pid, pf);
-  }
+  locateLeafNode(ptr, searchKey, pid);
   if (ptr.LeafNode->locate(searchKey, cursor.eid)) {
     clear();
     return RC_NO_SUCH_RECORD; }

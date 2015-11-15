@@ -31,6 +31,8 @@
 	 PageFile::PAGE_SIZE - left*sizeof(ITEM##TYPE));				\
   buffercpy(buf_old);									\
   sibling.buffercpy(buf_new);  								\
+  sibling.downgrade();									\
+  downgrade();										\
   GET_PTR(TYPE) = ptr;									\
   sibling.GET_PTR(TYPE) = ptr;								\
   setKeyCount(left);									\

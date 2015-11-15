@@ -113,19 +113,16 @@ class BTreeIndex {
     { buf = (SmartNodePtr*) realloc(buf, buf_size*2); buf_size*=2;}
     buf[size++] = p;
   }
-   void delPtr() { delete buf[size--].TreeNode;  }
+   
+  void delPtr() { delete buf[size-1].TreeNode; size--; }
    SmartNodePtr getPtr() {return buf[size-1];}
-   void clear() {while (size!=0) delPtr();}
- private:
+  void clear() {while (size!=0) delPtr();}
+
+  void locateLeafNode(SmartNodePtr&, int, PageId&);
   PageFile pf;         /// the PageFile used to store the actual b+tree in disk
   SmartNodePtr* buf;
   int		size;
   int		buf_size;
-  int      	treeHeight; /// the height of the tree
-  /// Note that the content of the above two variables will be gone when
-  /// this class is destructed. Make sure to store the values of the two 
-  /// variables in disk, so that they can be reconstructed when the index
-  /// is opened again later.
 };
 
 #endif /* BTREEINDEX_H */
