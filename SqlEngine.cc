@@ -14,6 +14,8 @@
 #include <fstream>
 #include "Bruinbase.h"
 #include "SqlEngine.h"
+#include "BTreeIndex.h"
+#include <set>
 
 using namespace std;
 
