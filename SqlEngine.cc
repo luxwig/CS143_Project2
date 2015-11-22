@@ -144,7 +144,7 @@ RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
       {
         if(!neKey.empty())
         {
-          keyiter = neKey.find(key);
+          keyIter = neKey.find(key);
           if(keyIter != neKey.end())
             continue;
         }
@@ -159,7 +159,7 @@ RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
       // if the attr is val
       if(eqValue != NULL)
       {
-        if(value != eqvalue)
+        if(value != eqValue)
           continue;
       }
 
@@ -272,7 +272,7 @@ RC SqlEngine::load(const string& table, const string& loadfile, bool index)
   lf.open(loadfile.c_str());
   if (!lf.is_open())
   {
-    fprintf(stderr, "Error: Filed opening load file")
+    fprintf(stderr, "Error: Filed opening load file");
   }
 
   RecordFile rf;
