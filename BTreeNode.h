@@ -13,7 +13,9 @@
 #define TYPE_BTLEAF	1
 #define TYPE_BTNONLEAF	2
 #define TYPE_BTROOT	4
-#define KEY_NUM		4
+#ifndef KEY_NUM
+#define KEY_NUM		80
+#endif
 
 #include "RecordFile.h"
 #include "PageFile.h"

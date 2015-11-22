@@ -1,15 +1,12 @@
-
 #define _DEBUG_FLAG
+#define KEY_NUM 4
+
 #include "Bruinbase.h"
 #include "PageFile.h"
 #include "BTreeIndex.h"
 #include "BTreeNode.h"
 
 #include <stdio.h>
-
-#undef KEY_NUM
-
-#define KEY_NUM 4
 
 #define NODEI(N,X) { 	\
   RecordId rid;		\

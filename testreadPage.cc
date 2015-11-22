@@ -7,10 +7,6 @@
 
 #include <stdio.h>
 
-
-
-
-
 void readPage(int n)
 {
   PageFile pf("test.data", 'r');
@@ -23,6 +19,7 @@ void readPage(int n)
   if (ptr.TreeNode->getType() == TYPE_BTLEAF) ptr.LeafNode->print();
   else ptr.NonLeafNode->print();
   printf ("**********\n");
+  pf.close();
 }
 
 int main()
@@ -36,4 +33,5 @@ int main()
       break;
     }
     else readPage(n);
+  pf.close();
 }
