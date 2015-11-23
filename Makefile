@@ -26,3 +26,7 @@ clean:
 	rm -f *.data	
 	rm -f input*
 	rm -f output*
+	rm -f *.tbl
+	rm -f *.del
+	rm -f *.sql
+	rm -f *.sh
