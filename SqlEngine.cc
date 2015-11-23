@@ -267,60 +267,64 @@ RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
 RC SqlEngine::load(const string& table, const string& loadfile, bool index)
 {
   /* your code here */
-// Open loadfile for reading
-  ifstream lf;
-  lf.open(loadfile.c_str());
-  if (!lf.is_open())
+RecordFile rf;   // RecordFile containing the table
+  RecordId   rid;  // record cursor for table scanning
+  RC     rc;
+  BTreeIndex tree;  //BTreeIndex for indexing (if applicable)
+  
+  string line; // string holding each line from loadfile
+  int    key; // holds key as parsed from line's tuple pair
+  string value; //holds value as parsed from line's tuple pair
+  
+  //open loadfile as fstream
+  ifstream tableData(loadfile.c_str());
+  
+  //check that provided loadfile can be opened
+  if(!tableData.is_open())
+  fprintf(stderr, "Error: loadfile %s cannot be opened\n", loadfile.c_str());
+  
+  //open or create specified table file
+  rc = rf.open(table + ".tbl", 'w');
+  
+  //check index for making BTree
+  if(index)
   {
-    fprintf(stderr, "Error: Filed opening load file");
-  }
-
-  RecordFile rf;
-  if(rf.open(table + ".tbl", 'w') != 0)
-  {
-    fprintf(stderr, "Error: Failed accessing table\n");
-    rf.close();
-    lf.close();
-    return RC_FILE_OPEN_FAILED;
-  }
-
-  //open index file
-  BTreeIndex idx;
-  if(index == true)
-  {
-    if(idx.open(table + ".idx", 'w') != 0)
+  //open and write to BTreeIndex as tablename.idx
+  tree.open(table + ".idx", 'w');
+  
+  //get every line from loadfile
+    while(getline(tableData, line))
     {
-      fprintf(stderr, "Error: Failed opening index file");
-      return RC_FILE_OPEN_FAILED;
-    }
-  }
-
-  string line;
-
-  while (lf.good() && getline(lf, line))
-  {
-    RecordId rid;
-    int key;
-    string value;
-
     parseLoadLine(line, key, value);
-    rf.append(key, value,rid);
-
-    if(index == true)
+    if(rf.append(key, value, rid)!=0)
+      return RC_FILE_WRITE_FAILED;
+    
+    //insert (key, rid) pair into BTree for indexing
+    //check for errors in the meantime
+    if(tree.insert(key, rid)!=0)
+      return RC_FILE_WRITE_FAILED;
+    }
+    
+    //tree.print();
+  
+  //close the index tree and file
+  tree.close();
+  }
+  else
+  {
+    //get every line from loadfile
+    while(getline(tableData, line))
     {
-      if(idx.insert(key, rid) != 0)
-      {
-        fprintf(stderr,"Error: Failed inserting index");
-        return RC_INVALID_ATTRIBUTE;
-      }
+    parseLoadLine(line, key, value);
+    rc = rf.append(key, value, rid);  
     }
   }
-
+  
+  //close RecordFile and the loadfile
   rf.close();
-  lf.close();
-  if( index == true)
-    idx.close();
-  return 0;
+  tableData.close();
+  
+  return rc;
 }
 RC SqlEngine::parseLoadLine(const string& line, int& key, string& value)
 {
