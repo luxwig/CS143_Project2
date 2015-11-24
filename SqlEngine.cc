@@ -267,32 +267,29 @@ RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
 RC SqlEngine::load(const string& table, const string& loadfile, bool index)
 {
   /* your code here */
-RecordFile rf;   // RecordFile containing the table
-  RecordId   rid;  // record cursor for table scanning
+RecordFile rf;   
+  RecordId   rid; 
   RC     rc;
-  BTreeIndex tree;  //BTreeIndex for indexing (if applicable)
+  BTreeIndex tree;  
   
-  string line; // string holding each line from loadfile
-  int    key; // holds key as parsed from line's tuple pair
-  string value; //holds value as parsed from line's tuple pair
-  
-  //open loadfile as fstream
+  string line; 
+  int    key; 
+  string value; 
+
   ifstream tableData(loadfile.c_str());
   
-  //check that provided loadfile can be opened
+  //check if loadfile can be opened
   if(!tableData.is_open())
   fprintf(stderr, "Error: loadfile %s cannot be opened\n", loadfile.c_str());
   
   //open or create specified table file
   rc = rf.open(table + ".tbl", 'w');
   
-  //check index for making BTree
   if(index)
   {
-  //open and write to BTreeIndex as tablename.idx
   tree.open(table + ".idx", 'w');
   
-  //get every line from loadfile
+  //get line from loadfile
     while(getline(tableData, line))
     {
     parseLoadLine(line, key, value);
@@ -300,19 +297,15 @@ RecordFile rf;   // RecordFile containing the table
       return RC_FILE_WRITE_FAILED;
     
     //insert (key, rid) pair into BTree for indexing
-    //check for errors in the meantime
     if(tree.insert(key, rid)!=0)
       return RC_FILE_WRITE_FAILED;
     }
-    
-    //tree.print();
   
-  //close the index tree and file
   tree.close();
   }
   else
   {
-    //get every line from loadfile
+    //get line from loadfile
     while(getline(tableData, line))
     {
     parseLoadLine(line, key, value);
