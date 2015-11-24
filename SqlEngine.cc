@@ -53,11 +53,7 @@ RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
   BTreeIndex index;
 
   // open the table file
-  if ((rc = rf.open(table + ".tbl", 'r')) < 0) {
-    fprintf(stderr, "Error: table %s does not exist\n", table.c_str());
-    return rc;
-  }
-
+ 
   int cond_size = cond.size();
   bool only_value = true;
   bool need_value = false;
@@ -66,9 +62,14 @@ RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
     if (cond[i].attr == 1 && cond[i].comp!=SelCond::NE) only_value = false;
     if (cond[i].attr == 2) need_value = true; }
   if (only_value || (index.open(table + ".idx", 'r') != 0)) {
-    // TODO TAKE OUT
-    fprintf(stderr, "Error: table index does not exist\n");
+  
   // scan the table file from the beginning
+  
+  if ((rc = rf.open(table + ".tbl", 'r')) < 0) {
+    fprintf(stderr, "Error: table %s does not exist\n", table.c_str());
+    return rc;
+  }
+
   rid.pid = rid.sid = 0;
   count = 0;
   while (rid < rf.endRid()) {
@@ -168,21 +169,25 @@ RC SqlEngine::select(int attr, const string& table, const vector<SelCond>& cond)
 		 range_min = MAX(range_min, atoi(cond[i].value)+(cond[i].comp==SelCond::GT));
 		 break;
       }
-  if (range_min>range_max) { 
-    fprintf(stderr, "%d\t%d\t wrong range\n", range_min, range_max);
-    goto no_result;}
+  if (range_min>range_max) goto no_result;
  
   // locate starting entry
   IndexCursor ic;
   count = 0;
   rc = index.locate(range_min, ic);
-  if (ic.pid == -1) {fprintf(stderr, "here\n"); goto no_result;}
+  if (ic.pid == -1) goto no_result;
 
   if (attr == 2 || attr == 3) need_value = true;
   // iteration
+  
+  if (need_value && (rc = rf.open(table + ".tbl", 'r')) < 0) {
+      fprintf(stderr, "Error: table %s does not exist\n", table.c_str());
+      goto exit_select;
+   }
+
   while (index.readForward(ic, key, rid) != RC_NO_SUCH_RECORD)
   {
-    if (key > range_max) break;
+    if (key > range_max) break; 
 
     // read value on demand
     if (need_value &&(rc = rf.read(rid, key, value)) < 0) {
