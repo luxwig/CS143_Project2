@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <string.h>
 #include "BTreeNode.h"
 
@@ -26,8 +27,8 @@
   PageId ptr = GET_PTR(TYPE); 								\
   char buf_old[PageFile::PAGE_SIZE] = {},						\
        buf_new[PageFile::PAGE_SIZE] = {};						\
-  memcpy(buf_old + sizeof(int)*3, &GET_ITEM(TYPE, 0), (left)*sizeof(ITEM##TYPE));	\
-  memcpy(buf_new + sizeof(int)*3, &GET_ITEM(TYPE, left),	 			\
+  memcpy(buf_old + sizeof(int)*2, &GET_ITEM(TYPE, 0), (left)*sizeof(ITEM##TYPE));	\
+  memcpy(buf_new + sizeof(int)*2, &GET_ITEM(TYPE, left),	 			\
 	 PageFile::PAGE_SIZE - left*sizeof(ITEM##TYPE));				\
   buffercpy(buf_old);									\
   sibling.buffercpy(buf_new);  								\
@@ -123,10 +124,8 @@ RC BTLeafNode::insertAndSplit(int key, const RecordId& rid,
 RC BTLeafNode::locate(int searchKey, int& eid)
 {
   LOCATE_NODE(LEAF, searchKey);
-  if (GET_ITEM(LEAF, result).m_key == searchKey) {
-    eid = result;
-    return 0;
-  }
+  eid = result;
+  if (GET_ITEM(LEAF, result).m_key == searchKey) return 0;
   return RC_NO_SUCH_RECORD; 
 
 }

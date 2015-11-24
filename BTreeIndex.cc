@@ -153,7 +153,14 @@ RC BTreeIndex::locate(int searchKey, IndexCursor& cursor)
   locateLeafNode(ptr, searchKey, pid);
   if (ptr.LeafNode->locate(searchKey, cursor.eid)) {
     clear();
-    return RC_NO_SUCH_RECORD; }
+    cursor.pid = pid;
+    cursor.eid++;
+    if (!ptr.LeafNode->validEntry(cursor.eid)) {
+        cursor.pid = ptr.LeafNode->getNextNodePtr();
+	cursor.eid = 0;
+    }
+    return RC_NO_SUCH_RECORD; 
+  }
   clear();
   cursor.pid = pid;
   return 0; 
@@ -169,8 +176,8 @@ RC BTreeIndex::readForward(IndexCursor& cursor, int& key, RecordId& rid)
     {
       cursor.eid--;
       PageId pid = ptr.LeafNode->getNextNodePtr();
-      if (pid  == -1) return RC_END_OF_TREE;
       cursor.pid = pid; cursor.eid = 0;
+      if (pid  == -1) return RC_END_OF_TREE;
     }
     return 0;
 }

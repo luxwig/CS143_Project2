@@ -14,7 +14,7 @@
 #define TYPE_BTNONLEAF	2
 #define TYPE_BTROOT	4
 #ifndef KEY_NUM
-#define KEY_NUM		80
+#define KEY_NUM		82
 #endif
 
 #include "RecordFile.h"
@@ -38,21 +38,21 @@ typedef struct {
 union Buffer {
   char _buffer[PageFile::PAGE_SIZE];
   struct {
-     int      count;
+     short      count;
+     short      type;
      PageId   ptr;
-     int      type;
      LeafItem item[KEY_NUM];
   } Leaf;
   struct  {
-     int         count;
+     short         count;
+     short         type;
      PageId      ptr;
-     int         type;
      NonLeafItem item[KEY_NUM];
   } NonLeaf;
   struct {
-    int		count;
+    short	count;
+    short	type;
     PageId	ptr;
-    int		type;
   } Node;
 };
 

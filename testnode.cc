@@ -291,7 +291,7 @@ void locate_NotFound()
   }
   printBuffer(n.getBuffer());
   int eid;
-  printf("error : %d\n",n.locate(67, eid));
+  printf("error : %d\n",n.locate(3, eid));
   printf("eid : %d\n",eid);
 }
 
@@ -309,6 +309,7 @@ int main()
   insertSplitLeafTest(80,81);
   insertSplitLeafTest(79,79);
   insertSplitLeafTest(79,81);*/
-  locateChildPtr_Notfound();
+  //locateChildPtr_Notfound();
+  locate_NotFound();
 }
 
