@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <string.h>
 #include "BTreeNode.h"
 
@@ -173,7 +172,7 @@ RC BTNonLeafNode::insertAndSplit(int key, PageId pid, BTNonLeafNode& sibling, in
   sibling.buffer.Node.type = TYPE_BTNONLEAF;
   return 0;
 } 
-#include <stdio.h>
+
 RC BTNonLeafNode::locateChildPtr(int searchKey, PageId& pid)
 {
   LOCATE_NODE(NONLEAF, searchKey);
